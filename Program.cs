@@ -6,7 +6,7 @@ namespace csharp_game_tictactoe
     {
         static void Main(string[] args)
         {
-            string[] boardGame = new string[9];
+            CaseStates[] boardGame = new CaseStates[9];
             List<int> UnPlayedCases = new List<int> {0,1,2,3,4,5,6,7,8};
             Random rand = new Random();
             int userCase, iaCase;
@@ -16,7 +16,6 @@ namespace csharp_game_tictactoe
             Console.Write("Entrez une case (0 à 8)\nTapez une touche pour commencer");
             Console.ReadKey(true);
             Console.Clear();
-            InitializeBoard(boardGame);     
             DisplayBoard(boardGame);       
 
             while(true)
@@ -24,37 +23,44 @@ namespace csharp_game_tictactoe
                 // user
                 userCase = GetCase("Entrez la case voulue: ");
 
-                if(IsEmpty(boardGame, userCase, Player.PlayerOne))
+                if(IsEmpty(boardGame, userCase, CaseStates.Circle))
                 {
                     DisplayBoard(boardGame);
                     UnPlayedCases.Remove(userCase);
                 }                    
 
-                if(IsWin(boardGame).Item1 || UnPlayedCases.Count == 0)
-                    break;                
+                if(IsWin(boardGame, CaseStates.Circle))
+                {
+                    Console.WriteLine("Vous avez gagné");
+                    break;
+                }
+
+                if(UnPlayedCases.Count == 0)
+                {
+                    Console.WriteLine("No winner");
+                    break;
+                }                    
 
                 // ia
                 iaCase = rand.Next(0,UnPlayedCases.Count);                
 
-                if(IsEmpty(boardGame, UnPlayedCases[iaCase], Player.PlayerTwo))                                
+                if(IsEmpty(boardGame, UnPlayedCases[iaCase], CaseStates.Cross))                                
                 {
                     DisplayBoard(boardGame);
                     UnPlayedCases.Remove(UnPlayedCases[iaCase]);                       
                 }                
 
-                if(IsWin(boardGame).Item1 || UnPlayedCases.Count == 0)
+                if(IsWin(boardGame, CaseStates.Cross))
+                {
+                    Console.WriteLine("Vous avez perdu");
                     break;     
+                }
             }
-
-            if(IsWin(boardGame).Item1)
-                Console.WriteLine($"{(IsWin(boardGame).Item2 == Player.PlayerOne ? "Vous avez gagné" : "Vous avez perdu")}");
-            else
-                Console.WriteLine($"No winner");
         }
-
-        enum Player
+        
+        enum CaseStates
         {
-            NoPlayer, PlayerOne, PlayerTwo
+            Empty, Circle, Cross
         }
 
         static int GetCase(string msg, int min = 0, int max = 8)
@@ -70,73 +76,68 @@ namespace csharp_game_tictactoe
             return output;
         }
 
-        static bool IsEmpty(string[] grid, int gridCase, Player player)
+        static bool IsEmpty(CaseStates[] boardGame, int gridCase, CaseStates player)
         {
-            if(String.Compare(grid[gridCase], " ") == 0)
+            if(boardGame[gridCase] == CaseStates.Empty)
             {
-                grid[gridCase] = player == Player.PlayerOne ? "O" : "X";
+                boardGame[gridCase] = player;
                 return true;
             }
             
             return false;
         }
 
-        static void DisplayBoard(string[] boardGame)
+        static void DisplayBoard(CaseStates[] boardGame)
         {
             Console.Clear();
             Console.WriteLine("───────");
-            for(int row = 0, max = boardGame.Length; row < max; row++)
+            for(int i = 0, max = boardGame.Length; i < max; i++)
             {
-                if(row == 3 || row == 6)
+                if(i == 3 || i == 6)
                     Console.WriteLine("│\n───────");                
                 
                 Console.Write("│");
-                Console.Write($"{boardGame[row]}");                
+                switch(boardGame[i])
+                {
+                    case CaseStates.Empty:
+                        Console.Write(" ");
+                        break;
+                    case CaseStates.Circle:
+                        Console.Write("O");
+                        break;
+                    case CaseStates.Cross:
+                       Console.Write("X");
+                        break;
+                }                              
             }            
             Console.WriteLine("│\n───────");
         }
-
-        static void InitializeBoard(string[] boardGame)
-        {
-            for(int i = 0, max = boardGame.Length; i < max; i++)
-                boardGame[i] = " ";
-        }
-
-        static (bool, Player) IsWin(string[] boardGame)
-        {
-            if(boardGame[0] != " ")
+        static bool IsWin(CaseStates[] boardGame, CaseStates player)
+        {           
+            // test i
+            for(int i = 0, size = boardGame.Length; i < size; i+= 3)
             {
-                if(boardGame[0] == boardGame[1] && boardGame[0] == boardGame[2])
-                    return (true, boardGame[0] == "O" ? Player.PlayerOne : Player.PlayerTwo);
-                if(boardGame[0] == boardGame[4] && boardGame[0] == boardGame[8])
-                    return (true, boardGame[0] == "O" ? Player.PlayerOne : Player.PlayerTwo);
-                if(boardGame[0] == boardGame[3] && boardGame[3] == boardGame[6])
-                    return (true, boardGame[0] == "O" ? Player.PlayerOne : Player.PlayerTwo);
-            }
-            if(boardGame[1] != " ")
-            {
-                if(boardGame[1] == boardGame[4] && boardGame[1] == boardGame[7])
-                    return (true, boardGame[1] == "O" ? Player.PlayerOne : Player.PlayerTwo);
-            }
-            if(boardGame[2] != " ")
-            {
-                if(boardGame[2] == boardGame[4] && boardGame[2] == boardGame[6])
-                    return (true, boardGame[2] == "O" ? Player.PlayerOne : Player.PlayerTwo);  
-                if(boardGame[2] == boardGame[5] && boardGame[2] == boardGame[8])
-                    return (true, boardGame[2] == "O" ? Player.PlayerOne : Player.PlayerTwo);
-            }
-            if(boardGame[3] != " ")
-            {
-                if(boardGame[3] == boardGame[4] && boardGame[3] == boardGame[5])
-                    return (true, boardGame[3] == "O" ? Player.PlayerOne : Player.PlayerTwo);
-            }
-            if(boardGame[6] != " ")
-            {
-                if(boardGame[6] == boardGame[7] && boardGame[6] == boardGame[8])
-                    return (true, boardGame[6] == "O" ? Player.PlayerOne : Player.PlayerTwo);
+                if(boardGame[i] == player && boardGame[i+1] == player && boardGame[i+2] == player)
+                    return true;
             }
 
-            return (false, Player.NoPlayer);
+            // test collumns
+            for(int i = 0; i < 3; i++)
+            {
+                if(boardGame[i] == player && boardGame[i+3] == player && boardGame[i+6] == player)
+                    return true;
+            }
+
+            // test oblique left
+            if(boardGame[0] == player && boardGame[4] == player && boardGame[8] == player)
+                return true;
+
+            // test oblique right
+            if(boardGame[2] == player && boardGame[4] == player && boardGame[6] == player)
+                return true;
+
+            // default
+            return false;
         }
     }
 }
